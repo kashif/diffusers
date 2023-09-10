@@ -38,6 +38,7 @@ class DDPMWuerstchenSchedulerOutput(BaseOutput):
     """
 
     prev_sample: torch.FloatTensor
+    x0_pred: torch.FloatTensor
 
 
 def betas_for_alpha_bar(
@@ -204,7 +205,7 @@ class DDPMWuerstchenScheduler(SchedulerMixin, ConfigMixin):
         if not return_dict:
             return (pred.to(dtype),)
 
-        return DDPMWuerstchenSchedulerOutput(prev_sample=pred.to(dtype))
+        return DDPMWuerstchenSchedulerOutput(prev_sample=pred.to(dtype), x0_pred=mu.to(dtype))
 
     def add_noise(
         self,
