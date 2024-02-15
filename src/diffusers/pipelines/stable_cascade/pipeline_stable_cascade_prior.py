@@ -615,7 +615,8 @@ class StableCascadePriorPipeline(DiffusionPipeline, LoraLoaderMixin):
 
             if callback is not None and i % callback_steps == 0:
                 step_idx = i // getattr(self.scheduler, "order", 1)
-                callback(step_idx, t, latents)
+                r = callback(step_idx, t, latents)
+                yield r
 
         # Offload all models
         self.maybe_free_model_hooks()
@@ -626,4 +627,4 @@ class StableCascadePriorPipeline(DiffusionPipeline, LoraLoaderMixin):
         if not return_dict:
             return (latents,)
 
-        return WuerstchenPriorPipelineOutput(latents)
+        yield WuerstchenPriorPipelineOutput(latents)
