@@ -986,7 +986,7 @@ def main(args):
                 model_losses = F.mse_loss(model_pred.float(), target.float(), reduction="none")
                 model_losses = model_losses.mean(dim=list(range(1, len(model_losses.shape))))
                 model_losses_w, model_losses_l = model_losses.chunk(2)
-                log_odds = model_losses_w - model_losses_l
+                log_odds = -((model_losses_w - model_losses_l) - (torch.exp(-model_losses_w) - torch.exp(-model_losses_l)))
 
                 # Ratio loss.
                 ratio = F.logsigmoid(log_odds)
@@ -1039,7 +1039,12 @@ def main(args):
                             args, unet=unet, vae=vae, accelerator=accelerator, weight_dtype=weight_dtype, epoch=epoch
                         )
 
-            logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
+            logs = {"total loss": loss.detach().item(), 
+                    "lr": lr_scheduler.get_last_lr()[0], 
+                    "Main loss": model_losses_w.mean().detach().item(),
+                    "OR loss": -ratio_losses.mean().detach().item(),
+                    "model_losses_w": model_losses_w.mean().detach().item(),
+                    "model_losses_l": model_losses_l.mean().detach().item()}
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
 
